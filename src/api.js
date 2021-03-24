@@ -1,6 +1,6 @@
 const express = require("express");
 const serverless = require("serverless-http");
-const {users} = require("../config/_firebase/firebaseRef")
+const {users,postUsers} = require("../config/_firebase/firebaseRef")
 const app = express();
 const router = express.Router();
 

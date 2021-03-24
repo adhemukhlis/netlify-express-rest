@@ -53,8 +53,8 @@ router.post("/users", ( req, res ) => {
 });
 
 app.use(`/.netlify/functions/api`, router);
-app.listen(process.env.port || 4000, ( ) => {
-	console.log( 'listening api' );
-});
+// app.listen(process.env.port || 4000, ( ) => {
+// 	console.log( 'listening api' );
+// });
 module.exports = app;
 module.exports.handler = serverless(app);

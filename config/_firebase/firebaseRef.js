@@ -1,8 +1,17 @@
-import firebase from "./firebaseInit";
-
+var firebase = require('firebase')
+const config = {
+	apiKey: "AIzaSyDkI3uplq9THqQ9019P5oj9DD36oNhKpqk",
+	authDomain: "netlify-express-rest.firebaseapp.com",
+	projectId: "netlify-express-rest",
+	storageBucket: "netlify-express-rest.appspot.com",
+	messagingSenderId: "522808349855",
+	appId: "1:522808349855:web:b9c5510bc1e03b883dfeaa"
+};
+const firebaseInitConfig =  firebase.initializeApp( config )
+const firebaseFirestore = firebaseInitConfig.firestore()
 export const users = async( ) => {
-	firebase.settings({ timestampsInSnapshots: true });
-	firebase
+	firebaseFirestore.settings({ timestampsInSnapshots: true });
+	firebaseFirestore
 		.collection( 'users' )
 		.orderBy( 'waktu', 'desc' )
 		.get( )
@@ -19,8 +28,8 @@ export const users = async( ) => {
 }
 
 export const postUsers = async({ username, email }) => {
-	firebase.settings({ timestampsInSnapshots: true });
-	firebase
+	firebaseFirestore.settings({ timestampsInSnapshots: true });
+	firebaseFirestore
 		.collection( 'users' )
 		.add({username, email, waktu: new Date( )});
 	return ({ username, email });

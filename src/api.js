@@ -3,7 +3,8 @@ const serverless = require( "serverless-http" );
 const cors = require( 'cors' );
 const timestamp = new Date( ).getTime( );
 var firebase = require( 'firebase' );
-const { success, error, validation } = require( "../config/responseApi" );
+const { success, error } = require( "../config/responseApi" );
+global.fetch = require("node-fetch");
 // const timestamp = firebase 	.firestore 	.FieldValue
 // 	.serverTimestamp().now();
 const config = {
@@ -157,8 +158,8 @@ router.post("/users", ( req, res ) => {
 });
 
 app.use( `/.netlify/functions/api`, router );
-// app.listen(process.env.port || 4000, ( ) => {
-// 	console.log( 'listening api' );
-// });
+app.listen(process.env.port || 4000, ( ) => {
+	console.log( 'listening api' );
+});
 module.exports = app;
 module.exports.handler = serverless( app );

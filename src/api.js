@@ -1,10 +1,11 @@
+global.fetch = require("node-fetch");
 const express = require( "express" );
 const serverless = require( "serverless-http" );
 const cors = require( 'cors' );
 const timestamp = new Date( ).getTime( );
 var firebase = require( 'firebase' );
 const { success, error } = require( "../config/responseApi" );
-global.fetch = require("node-fetch");
+
 // const timestamp = firebase 	.firestore 	.FieldValue
 // 	.serverTimestamp().now();
 const config = {

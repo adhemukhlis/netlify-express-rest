@@ -1,4 +1,4 @@
-// global.fetch = require("node-fetch");
+global.fetch = require("node-fetch").default;
 const express = require( "express" );
 const serverless = require( "serverless-http" );
 const cors = require( 'cors' );

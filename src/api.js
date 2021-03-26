@@ -2,22 +2,22 @@
 const express = require( "express" );
 const serverless = require( "serverless-http" );
 const cors = require( 'cors' );
-// const timestamp = new Date( ).getTime( );
-// var firebase = require( 'firebase' );
-// const { success, error } = require( "../config/responseApi" );
+const timestamp = new Date( ).getTime( );
+var firebase = require( 'firebase' );
+const { success, error } = require( "../config/responseApi" );
 
-// const timestamp = firebase 	.firestore 	.FieldValue
+// const timestamp = firebase .firestore 	.FieldValue
 // 	.serverTimestamp().now();
-// const config = {
-// 	apiKey: "AIzaSyDkI3uplq9THqQ9019P5oj9DD36oNhKpqk",
-// 	authDomain: "netlify-express-rest.firebaseapp.com",
-// 	projectId: "netlify-express-rest",
-// 	storageBucket: "netlify-express-rest.appspot.com",
-// 	messagingSenderId: "522808349855",
-// 	appId: "1:522808349855:web:b9c5510bc1e03b883dfeaa"
-// };
-// var firebaseInitConfig = firebase.initializeApp( config );
-// var firebaseFirestore = firebaseInitConfig.firestore( );
+const config = {
+	apiKey: "AIzaSyDkI3uplq9THqQ9019P5oj9DD36oNhKpqk",
+	authDomain: "netlify-express-rest.firebaseapp.com",
+	projectId: "netlify-express-rest",
+	storageBucket: "netlify-express-rest.appspot.com",
+	messagingSenderId: "522808349855",
+	appId: "1:522808349855:web:b9c5510bc1e03b883dfeaa"
+};
+var firebaseInitConfig = firebase.initializeApp( config );
+var firebaseFirestore = firebaseInitConfig.firestore( );
 
 const app = express( );
 const router = express.Router( );
@@ -61,24 +61,40 @@ router.get("/test", ( req, res ) => {
 // 	return await(await firebaseFirestore.doc( id ).get( )).data( );
 
 // }
-// const getUsers = async( ) => {
-// 	return await firebaseFirestore
-// 		.collection( 'users' )
-// 		.orderBy( 'updated_at', 'desc' )
-// 		.get( )
-// 		.then(snapshot => {
-// 			const response = snapshot
-// 				.docs
-// 				.map(( hasil ) => ({
-// 					id: hasil.id,
-// 					...hasil.data( )
-// 				}));
-// 			return response;
-// 		})
-// 		.catch(( error ) => {
-// 			return undefined;
-// 		})
-// }
+const getUsers = async( ) => {
+	return await firebaseFirestore
+		.collection( 'users' )
+		.orderBy( 'updated_at', 'desc' )
+		.get( )
+		.then(snapshot => {
+			const response = snapshot
+				.docs
+				.map(( hasil ) => ({
+					id: hasil.id,
+					...hasil.data( )
+				}));
+			return response;
+		})
+		.catch(( error ) => {
+			return undefined;
+		})
+}
+router.get("/users", async( req, res ) => {
+				getUsers( ).then(data => {
+					if ( data !== undefined ) {
+						res
+							.status( 200 )
+							.send(success( "success get users!", {
+								updated_at,
+								data
+							}, res.statusCode ));
+					} else {
+						res
+							.status( 500 )
+							.send(error( "something was wrong!", res.statusCode ));
+					}
+				});
+});
 // router.get("/users", async( req, res ) => {
 // 	if (Object.keys( req.query ).length > 0 && Object.keys( req.query ).includes( 'sync' )) {
 // 		const { sync } = req.query;

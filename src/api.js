@@ -1,5 +1,6 @@
 // global.fetch = require("node-fetch").default;
 const express = require( "express" );
+const axios = require( "axios" );
 const serverless = require( "serverless-http" );
 const cors = require( 'cors' );
 // const timestamp = new Date( ).getTime( );
@@ -25,11 +26,17 @@ const router = express.Router( );
 app.use(cors( ));
 app.use(express.json( ));
 app.use(express.urlencoded({ extended: true }));
-
+const Axios = axios.create({
+	baseURL: 'https://netlify-express-rest-default-rtdb.firebaseio.com',
+	timeout: 12000,
+	headers: {
+		'Content-Type': 'application/json'
+	}
+});
 const fetchUsers = async( ) => {
 	const config = {
 		method: 'get',
-		url: 'https://netlify-express-rest-default-rtdb.firebaseio.com/users.json'
+		url: '/users.json'
 	};
 	return await Axios( config ).then(async( response ) => {
 		

@@ -85,7 +85,8 @@ getHandler = async({ url }) => {
 		const { data } = response;
 		return { status: "success", data };;
 	}).catch(( error ) => {
-		return { status: "failed" };
+		console.log(error)
+		return { status: "failed",error };
 	});
 }
 
@@ -134,8 +135,6 @@ deleteUsers = async( ) => {
 		url: '/users.json'
 	};
 	return await Axios( config ).then(async( response ) => {
-		console.log( 'fetch user' );
-		console.log( response.data );
 		const { data } = response;
 		return data;
 	}).catch(( error ) => {
@@ -161,8 +160,8 @@ router.get("/users", async( req, res ) => {
 					.status( 200 )
 					.send(success( "looks like the data is not updated, the data is up to date !", [], 204 ));
 			} else {
-				fetchUsers( ).then(({ status, data }) => {
-					if ( status !== 'success' ) {
+				fetchUsers( ).then(({ status, data,error }) => {
+					if ( status === 'success' ) {
 						res
 							.status( 200 )
 							.send(success( "success get users!", {
@@ -170,16 +169,17 @@ router.get("/users", async( req, res ) => {
 								data: toArrayResponse( data )
 							}, res.statusCode ));
 					} else {
+						
 						res
 							.status( 500 )
-							.send(error( "something was wrong!", res.statusCode ));
+							.send(error( "something was wrong with firebase!", res.statusCode ));
 					}
 				});
 			}
 		} else if ( sync === 'true' ) {
 			const { data: prop_user } = await fetchPropertiesByName({ name: 'users' });
 			fetchUsers( ).then(({ status, data }) => {
-				if ( status !== 'success' ) {
+				if ( status === 'success' ) {
 					res
 						.status( 200 )
 						.send(success( "success get users!", {
@@ -193,7 +193,6 @@ router.get("/users", async( req, res ) => {
 				}
 			});
 		} else {
-			console.log( 'not match' );
 			res
 				.status( 400 )
 				.send(error( `must include '?sync' query, or maybe sync value not match with unix time format!`, res.statusCode ));
@@ -267,8 +266,8 @@ router.put("/users", ( req, res ) => {
 
 });
 app.use( `/.netlify/functions/api`, router );
-// app.listen(process.env.port || 4000, ( ) => {
-// 	console.log( 'listening api' );
-// });
+app.listen(process.env.port || 4000, ( ) => {
+	console.log( 'listening api' );
+});
 module.exports = app;
 module.exports.handler = serverless( app );

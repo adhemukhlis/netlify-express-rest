@@ -7,17 +7,20 @@ var routeValidator = require( 'express-route-validator' );
 const {
 	postHandler,
 	getHandler,
-	putHandler,
+	// putHandler,
 	patchHandler,
 	deleteHandler,
-	fetchPropertiesByName,
-	updateProperties,
+	// fetchPropertiesByName,
+	// updateProperties,
 	timestamp,
 	unixFormat,
 	toArrayResponse,
 	getName
 } = require( "../firerest/core.firerest" );
 const { success, error } = require( "../config/responseApi" );
+
+const redis = require( "redis" );
+const client = redis.createClient( );
 
 const app = express( );
 const router = express.Router( );
@@ -26,6 +29,12 @@ app.use(cors( ));
 app.use(express.json( ));
 app.use(express.urlencoded({ extended: true }));
 app.use(responseTime( ));
+client.on( "error", function ( error ) {
+	console.error( error );
+});
+
+client.set( "key", "value", redis.print );
+client.get( "key", redis.print );
 
 routeValidator.addValidator( 'isAllowSync', function ( val, config ) {
 	/**  only allow milliseconds timestamp epoch (13 digits number) example: https://currentmillis.com/ and `true` value*/
@@ -33,25 +42,44 @@ routeValidator.addValidator( 'isAllowSync', function ( val, config ) {
 	return ( pattern.test( val ) || val === 'true' );
 });
 
-const fetchUsers = async({ url, res, last_updated }) => {
-	await getHandler({ url }).then(({ status, data }) => {
-		if ( status === 'success' ) {
-			const dataResponse = toArrayResponse( data );
-			res
-				.status( 200 )
-				.send(success( `success get ${ getName( url ) }!`, {
-					table_name: getName( url ),
-					last_updated,
-					length: dataResponse.length,
-					data: dataResponse
-				}, res.statusCode ));
-		} else {
-			res
-				.status( 500 )
-				.send(error( "something was wrong with firebase!", res.statusCode ));
-		}
-	});
-}
+// const getResponseCache = async( name ) => {
+// 	return await client.get( `_responseCache/${ name }`, function ( err, result ) {
+// 		if ( result ) {
+// 			console.log( result );
+// 			return result;
+// 		} else {
+// 			console.log( 'sampe kosong' );
+// 			return 0;
+// 		}
+// 	});
+// }
+
+const setResponseCache = async({ name, etag, data }) => await client.set(`_responseCache/${ name }`, JSON.stringify({
+	etag,
+	...data
+}));
+const deleteResponseCache = async( name ) => await client.del( `_responseCache/${ name }` );
+
+// const fetchUsers = async({ url, res, last_updated }) => {
+
+// 	await getHandler({ url }).then(({ status, data }) => {
+// 		if ( status === 'success' ) {
+// 			const dataResponse = toArrayResponse( data );
+// 			res
+// 				.status( 200 )
+// 				.send(success( `success get ${ getName( url ) }!`, {
+// 					table_name: getName( url ),
+// 					last_updated,
+// 					length: dataResponse.length,
+// 					data: dataResponse
+// 				}, res.statusCode ));
+// 		} else {
+// 			res
+// 				.status( 500 )
+// 				.send(error( "something was wrong with firebase!", res.statusCode ));
+// 		}
+// 	});
+// }
 
 const postUsers = async({ url, res, username, email }) => {
 	await postHandler({
@@ -64,22 +92,16 @@ const postUsers = async({ url, res, username, email }) => {
 		}
 	}).then(({ status }) => {
 		if ( status === 'success' ) {
-			updateProperties({ name: getName( url ), last_updated: timestamp }).then(({ status: prop_update_status }) => {
-				if ( prop_update_status === 'success' ) {
-					res
-						.status( 200 )
-						.send(success( "OK", {
-							data: {
-								username,
-								email
-							}
-						}, res.statusCode ));
-				} else {
-					res
-						.status( 500 )
-						.send(error( "something was wrong!", res.statusCode ));
-				}
-			});
+
+			res
+				.status( 200 )
+				.send(success( "OK", {
+					data: {
+						username,
+						email
+					}
+				}, res.statusCode ));
+			deleteResponseCache(getName( url ));
 		} else {
 			res
 				.status( 500 )
@@ -119,36 +141,51 @@ router.get("/test", routeValidator.validate({
 	console.log(parsedURL.replace( '/', '' ));
 	console.log( getMethod );
 	console.log( req.query.sync );
-	res.send({ data: 'success' });
+
+	client.get( `_responseCache/${ parsedURL }`, function ( err, result ) {
+		if ( result ) {
+			const parsedResult = JSON.parse( result );
+			res.send( parsedResult );
+		} else {
+			setResponseCache({ name: parsedURL, etag: 'kajdf87uy898YU8jh', data: 'welcome 2!' });
+			res.send({ data: 'welcome 2!' });
+		}
+	});
 
 });
 
-router.get("/users", routeValidator.validate({
-	query: {
-		sync: {
-			isRequired: true,
-			isAllowSync: {
-				pattern: unixFormat
-			},
-			message: `validation failed!, must include sync query with the 13 digits unix milliseconds epoch format or \`true\` value.`
-		}
-	}
-}), async( req, res ) => {
-	const { sync } = req.query;
+router.get("/users", async( req, res ) => {
 	const pathname = req._parsedUrl.pathname;
-	if ( sync === 'true' ) {
-		const { data: prop_user } = await fetchPropertiesByName({name: getName( pathname )});
-		await fetchUsers({ url: pathname, last_updated: prop_user['last_updated'], res });
-	} else {
-		const { data: prop_user } = await fetchPropertiesByName({ name: 'users' });
-		if (parseInt( sync ) === prop_user['last_updated']) {
+	client.get(`_responseCache/${ getName( pathname ) }`, async( err, result ) => {
+		if ( result ) {
+			const parsedResult = JSON.parse( result );
 			res
 				.status( 200 )
-				.send(success( "Looks like data is up to date, no need to request!", [], 204 ));
+				.send(success( `success get ${ getName( pathname ) }!`, parsedResult, res.statusCode ));
 		} else {
-			await fetchUsers({ url: pathname, last_updated: prop_user['last_updated'], res });
+			await getHandler({ url: pathname }).then(({ status, data, etag }) => {
+				console.log( data );
+				if ( status === 'success' ) {
+					const dataResponse = toArrayResponse( data );
+					const dataResult = {
+						etag,
+						table_name: getName( pathname ),
+						length: dataResponse.length,
+						data: dataResponse
+					};
+					res
+						.status( 200 )
+						.send(success( `success get ${ getName( pathname ) }!`, dataResult, res.statusCode ));
+					setResponseCache({ name: getName( pathname ), etag, data: dataResult });
+				} else {
+					res
+						.status( 500 )
+						.send(error( "something was wrong with firebase!", res.statusCode ));
+				}
+			});
+
 		}
-	}
+	});
 });
 
 router.post("/users", routeValidator.validate({
@@ -183,9 +220,7 @@ router.put("/users", ( req, res ) => {
 			...otherBody
 		}).then(({ status }) => {
 			if ( status === 'success' ) {
-				updateProperties({ name: 'users', last_updated: timestamp }).then(({ status: prop_update_status }) => {
-					if ( prop_update_status === 'success' ) {
-						res
+				res
 							.status( 200 )
 							.send(success( "OK", {
 								data: {
@@ -193,12 +228,7 @@ router.put("/users", ( req, res ) => {
 									...otherBody
 								}
 							}, res.statusCode ));
-					} else {
-						res
-							.status( 500 )
-							.send(error( "something was wrong!", res.statusCode ));
-					}
-				});
+				deleteResponseCache(getName( url ));
 			} else {
 				res
 					.status( 500 )
@@ -217,21 +247,14 @@ router.delete("/users", ( req, res ) => {
 	if (Object.keys( req.body ).length > 0 && Object.keys( req.body ).includes( 'id' )) {
 		deleteUsers({ id }).then(({ status }) => {
 			if ( status === 'success' ) {
-				updateProperties({ name: 'users', last_updated: timestamp }).then(({ status: prop_update_status }) => {
-					if ( prop_update_status === 'success' ) {
-						res
+				res
 							.status( 200 )
 							.send(success( "OK", {
 								data: {
 									last_updated: timestamp
 								}
 							}, res.statusCode ));
-					} else {
-						res
-							.status( 500 )
-							.send(error( "something was wrong!", res.statusCode ));
-					}
-				});
+				deleteResponseCache(getName( url ));
 			} else {
 				res
 					.status( 500 )
@@ -245,8 +268,7 @@ router.delete("/users", ( req, res ) => {
 	}
 });
 
-// app.use( `/.netlify/functions/api`, router );
-app.use( `/api`, router );
+app.use( `/.netlify/functions/api`, router );
 
 app.listen(process.env.port || 4000, ( ) => {
 	console.log( 'listening api' );

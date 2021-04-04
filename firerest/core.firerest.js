@@ -31,8 +31,8 @@ exports.getHandler = async({ url, headers }) => {
 	};
 	return await Axios( config ).then(async( response ) => {
 		const { data, headers } = response;
-		console.log( headers.etag );
-		return { status: 'success', data };;
+		const { etag } = headers;
+		return { status: 'success', data, etag };;
 	}).catch(( error ) => {
 		console.log(error.toJSON( ));
 		return {

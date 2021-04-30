@@ -2,10 +2,10 @@
   "name": "netlify-express-rest",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/api",
   "scripts": {
-    "start": "node src/api",
-    "dev": "cls && npx nodemon src/api"
+    "start": "node src/api.js",
+    "dev": "cls && npx nodemon src/api.js"
   },
   "keywords": [],
   "author": "",

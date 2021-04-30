@@ -1,4 +1,4 @@
-global.fetch = require( "node-fetch" ).default;
+// global.fetch = require( "node-fetch" ).default;
 const express = require( "express" );
 const serverless = require( "serverless-http" );
 const cors = require( 'cors' );
@@ -125,32 +125,24 @@ const deleteUsers = async({ id }) => {
 	return await deleteHandler({ url: `/users/${ id }.json` });
 }
 
-router.get("/test", routeValidator.validate({
-	query: {
-		sync: {
-			isRequired: true,
-			isAllowSync: {
-				pattern: unixFormat
-			},
-			message: `validation failed!, must include sync query with the 13 digits unix milliseconds epoch format or \`true\` value.`
-		}
-	}
-}), async( req, res ) => {
+router.get("/test",  async( req, res ) => {
 	const parsedURL = req._parsedUrl.pathname;
 	const getMethod = req.method;
-	console.log(parsedURL.replace( '/', '' ));
-	console.log( getMethod );
-	console.log( req.query.sync );
+	res.send({data:`node on ${parsedURL}`});
+	
+	// console.log(parsedURL.replace( '/', '' ));
+	// console.log( getMethod );
+	// console.log( req.query.sync );
 
-	client.get( `_responseCache/${ parsedURL }`, function ( err, result ) {
-		if ( result ) {
-			const parsedResult = JSON.parse( result );
-			res.send( parsedResult );
-		} else {
-			setResponseCache({ name: parsedURL, etag: 'kajdf87uy898YU8jh', data: 'welcome 2!' });
-			res.send({ data: 'welcome 2!' });
-		}
-	});
+	// client.get( `_responseCache/${ parsedURL }`, function ( err, result ) {
+	// 	if ( result ) {
+	// 		const parsedResult = JSON.parse( result );
+	// 		res.send( parsedResult );
+	// 	} else {
+	// 		setResponseCache({ name: parsedURL, etag: 'kajdf87uy898YU8jh', data: 'welcome 2!' });
+	// 		res.send({ data: 'welcome 2!' });
+	// 	}
+	// });
 
 });
 
@@ -268,7 +260,7 @@ router.delete("/users", ( req, res ) => {
 	}
 });
 
-app.use( `/.netlify/functions/api`, router );
+app.use( `/api`, router );
 
 app.listen(process.env.port || 4000, ( ) => {
 	console.log( 'listening api' );

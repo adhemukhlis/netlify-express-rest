@@ -4,7 +4,7 @@ const serverless = require("serverless-http");
 const cors = require("cors");
 var responseTime = require("response-time");
 var routeValidator = require("express-route-validator");
-const path = require("path");
+// const path = require("path");
 const {
   postHandler,
   getHandler,
@@ -22,7 +22,7 @@ const { success, error } = require("./config/responseApi");
 
 const app = express();
 const router = express.Router();
-const routerRoot = express.Router();
+// const routerRoot = express.Router();
 
 app.use(cors());
 app.use(express.json());
@@ -111,9 +111,9 @@ const deleteUsers = ({ id }) => {
   return deleteHandler({ url: `/users/${id}.json` });
 };
 
-routerRoot.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "/html/index.html"));
-});
+// routerRoot.get("/", (req, res) => {
+//   res.sendFile(path.join(__dirname, "/html/index.html"));
+// });
 
 router.get("/", (req, res) => {
   const { headers, baseUrl } = req;
@@ -307,10 +307,10 @@ router.delete("/users", (req, res) => {
   }
 });
 
-// app.use( `/.netlify/functions/api`, router );
+app.use( `/.netlify/functions/api`, router );
 // app.use( `/.netlify/functions/`, routerRoot );
- app.use(`/api`, router);
- app.use("/", routerRoot);
+//  app.use(`/api`, router);
+//  app.use("/", routerRoot);
 
 app.listen(process.env.port || 4000, () => {
   console.log(`listening api ${process.env.port || 4000}`);

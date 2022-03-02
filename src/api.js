@@ -307,10 +307,10 @@ router.delete("/users", (req, res) => {
   }
 });
 
-app.use( `/.netlify/functions/api`, router );
-app.use( `/.netlify/functions/`, routerRoot );
-// app.use(`/api`, router);
-// app.use("/", routerRoot);
+// app.use( `/.netlify/functions/api`, router );
+// app.use( `/.netlify/functions/`, routerRoot );
+ app.use(`/api`, router);
+ app.use("/", routerRoot);
 
 app.listen(process.env.port || 4000, () => {
   console.log(`listening api ${process.env.port || 4000}`);

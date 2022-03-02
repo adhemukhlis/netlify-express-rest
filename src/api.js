@@ -312,9 +312,9 @@ app.use( `/.netlify/functions/api`, router );
 //  app.use(`/api`, router);
 //  app.use("/", routerRoot);
 
-app.listen(process.env.port || 4000, () => {
-  console.log(`listening api ${process.env.port || 4000}`);
-});
+// app.listen(process.env.port || 4000, () => {
+//   console.log(`listening api ${process.env.port || 4000}`);
+// });
 
 module.exports = app;
 module.exports.handler = serverless(app);

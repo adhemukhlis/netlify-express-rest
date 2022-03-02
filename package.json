@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=development ./node_modules/.bin/netlify-lambda serve src",
-    "build": "NODE_ENV=production ./node_modules/.bin/netlify-lambda build src"
+    "build": "NODE_ENV=production ./node_modules/.bin/netlify-lambda build src",
+    "dev": "cls && npx nodemon src/api.js"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,6 @@
     "serverless-http": "^2.7.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.7"
+    "nodemon": "^2.0.15"
   }
 }
